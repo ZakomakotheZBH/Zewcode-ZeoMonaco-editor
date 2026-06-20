@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ZeoMonaco editor</title>
+
+<!-- PWA Meta Tags -->
+<meta name="theme-color" content="#1e1e1e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ZTL Code">
+<link rel="apple-touch-icon" href="favicon.ico">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="manifest" href="data:application/manifest+json,{%22name%22:%22ZTL%20Code%20Studio%22,%22short_name%22:%22ZTL%20Code%22,%22description%22:%22Full%20file%20editing%22,%22start_url%22:%22/%22,%22display%22:%22standalone%22,%22theme_color%22:%22%231e1e1e%22,%22background_color%22:%22%231e1e1e%22,%22icons%22:[{%22src%22:%22favicon.ico%22,%22sizes%22:%22any%22,%22type%22:%22image/x-icon%22}]}">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Fira+Code&display=swap" rel="stylesheet">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+body{
+    background:#1e1e1e;
+    color:white;
+    font-family:Inter,sans-serif;
+    overflow:hidden;
+}
+.topbar{
+    height:50px;
+    background:#181818;
+    border-bottom:1px solid #333;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 15px;
+}
+.logo{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:700;
+}
+.logo-box{
+    width:18px;
+    height:18px;
+    background:#0078d4;
+    transform:rotate(45deg);
+}
+.main{
+    display:flex;
+    height:calc(100vh - 50px);
+}
+.sidebar{
+    width:320px;
+    background:#252526;
+    border-right:1px solid #333;
+    overflow:auto;
+    padding:10px;
+}
+h3{
+    color:#aaa;
+    font-size:13px;
+    margin:10px 0;
+}
+.file-item{
+    background:#2d2d2d;
+    padding:8px;
+    border-radius:6px;
+    margin-top:5px;
+    cursor:pointer;
+    font-size:13px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    transition:background 0.2s;
+}
+.file-item:hover{
+    background:#3a3a3a;
+}
+.file-name{
+    flex:1;
+    cursor:pointer;
+    font-family:"Fira Code", monospace;
+    font-size:12px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+.file-actions{
+    display:flex;
+    gap:8px;
+}
+.file-actions span{
+    cursor:pointer;
+    font-size:14px;
+    opacity:0.7;
+    transition:opacity 0.2s;
+}
+.file-actions span:hover{
+    opacity:1;
+}
+.folder{
+    background:#1f1f1f;
+    padding:8px;
+    border-radius:6px;
+    font-weight:bold;
+    color:#ffd866;
+    margin-top:10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+.folder-name{
+    cursor:pointer;
+    flex:1;
+}
+.folder-actions{
+    display:flex;
+    gap:8px;
+}
+.folder-actions span{
+    cursor:pointer;
+    font-size:14px;
+    opacity:0.7;
+}
+.btn{
+    width:100%;
+    padding:8px;
+    margin-top:6px;
+    background:#0078d4;
+    border:none;
+    color:white;
+    border-radius:6px;
+    cursor:pointer;
+}
+.btn:hover{
+    background:#0095ff;
+}
+.btn-warning{
+    background:#d46b00;
+}
+.btn-warning:hover{
+    background:#ff8800;
+}
+.btn-danger{
+    background:#8b0000;
+}
+.btn-danger:hover{
+    background:#cc0000;
+}
+.btn-publish{
+    background:#6f42c1;
+}
+.btn-publish:hover{
+    background:#8b5cf6;
+}
+.btn-success{
+    background:#28a745;
+}
+.btn-success:hover{
+    background:#34ce57;
+}
+.editor-area{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+}
+.tabs{
+    height:40px;
+    background:#252526;
+    border-bottom:1px solid #333;
+    display:flex;
+    align-items:center;
+    padding-left:10px;
+    gap:5px;
+    flex-wrap:wrap;
+    overflow-x:auto;
+}
+.tab{
+    background:#1e1e1e;
+    border:1px solid #333;
+    border-bottom:none;
+    padding:8px 14px;
+    border-radius:6px 6px 0 0;
+    font-size:12px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+.tab.active{
+    background:#2d2d2d;
+    border-bottom-color:#2d2d2d;
+}
+.tab-close{
+    color:#ff6666;
+    cursor:pointer;
+    font-weight:bold;
+    margin-left:5px;
+}
+textarea{
+    flex:1;
+    width:100%;
+    border:none;
+    outline:none;
+    resize:none;
+    background:#1e1e1e;
+    color:#d4d4d4;
+    padding:20px;
+    font-family:"Fira Code", monospace;
+    font-size:14px;
+    line-height:1.5;
+}
+.controls{
+    background:#252526;
+    border-top:1px solid #333;
+    padding:10px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+}
+button{
+    background:#0078d4;
+    border:none;
+    color:white;
+    padding:9px 12px;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:600;
+}
+button:hover{
+    background:#0095ff;
+}
+iframe{
+    width:100%;
+    height:280px;
+    border:none;
+    background:white;
+}
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.95);
+    display:none;
+    z-index:9999;
+    padding:20px;
+    overflow:auto;
+}
+.card{
+    background:#252526;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:10px;
+    border:1px solid #333;
+}
+input, select{
+    background:#1e1e1e;
+    border:1px solid #444;
+    padding:10px;
+    border-radius:6px;
+    color:white;
+    width:100%;
+    margin:5px 0;
+}
+label{
+    display:block;
+    margin-top:10px;
+    color:#aaa;
+    font-size:13px;
+}
+#offline-badge{
+    position:fixed;
+    bottom:10px;
+    right:10px;
+    background:#ff4444;
+    color:white;
+    padding:4px 12px;
+    border-radius:20px;
+    font-size:11px;
+    font-weight:bold;
+    z-index:10000;
+    display:none;
+}
+.user-info{
+    background:#2d2d2d;
+    padding:5px 12px;
+    border-radius:20px;
+    font-size:12px;
+    display:flex;
+    gap:10px;
+    align-items:center;
+}
+.user-info button{
+    padding:4px 8px;
+    font-size:11px;
+}
+.published-item{
+    background:#1e1e1e;
+    border-left:3px solid #6f42c1;
+}
+.url-text{
+    color:#00aaff;
+    font-size:11px;
+    word-break:break-all;
+    font-family:monospace;
+}
+.context-menu{
+    position:fixed;
+    background:#2d2d2d;
+    border:1px solid #555;
+    border-radius:6px;
+    padding:5px;
+    z-index:10002;
+    display:none;
+}
+.context-menu button{
+    display:block;
+    width:100%;
+    background:transparent;
+    text-align:left;
+    padding:5px 10px;
+    margin:2px 0;
+}
+.context-menu button:hover{
+    background:#444;
+}
+</style>
+</head>
+
+<body>
+<div class="topbar">
+<div class="logo">
+<div class="logo-box"></div>
+ZeoMonaco editor - Open-source
+</div>
+<div style="display:flex; gap:10px; align-items:center;">
+<div style="font-size:11px; color:#666;" id="status">● Online</div>
+<div id="userDisplay" class="user-info" style="display:none;">
+<span id="userName"></span>
+<button onclick="logout()" style="background:#555;">Logout</button>
+</div>
+<button id="loginBtn" onclick="showLoginModal()" style="background:#28a745;">Login</button>
+</div>
+</div>
+
+<div class="main">
+<div class="sidebar">
+<h3>📁 PROJECT FILES</h3>
+<button class="btn" onclick="createNewFile()">+ New File</button>
+<button class="btn" onclick="createNewFolder()">+ New Folder</button>
+<button class="btn" onclick="newProject()">💾 Save as Project</button>
+<button class="btn" onclick="openProjects()">📁 Load Project</button>
+<button class="btn btn-publish" onclick="showPublishManager()">🌐 Published Sites</button>
+<button class="btn btn-warning" onclick="syncToCloud()">☁️ Sync to Cloud</button>
+<button class="btn" onclick="syncFromCloud()">⬇️ Pull from Cloud</button>
+<div id="fileTree"></div>
+</div>
+<div class="editor-area">
+<div class="tabs" id="tabsContainer"></div>
+<textarea id="editor" placeholder="Edit your code here..."></textarea>
+<div class="controls">
+<button onclick="run()">▶ Run</button>
+<button onclick="preview()">🔍 Preview</button>
+<button onclick="saveCurrentFile()">💾 Save</button>
+<button onclick="publishCurrent()">🚀 Publish</button>
+</div>
+<iframe id="frame"></iframe>
+</div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="modal" id="loginModal">
+<h1>🔐 Account Login</h1>
+<p style="color:#aaa; margin:10px 0;">Create account or login - your code syncs across devices!</p>
+<label>Username</label>
+<input type="text" id="loginUsername" placeholder="myusername">
+<label>Password</label>
+<input type="password" id="loginPassword" placeholder="******">
+<button onclick="login()" style="margin-top:15px; background:#28a745;">Login / Sign Up</button>
+<button onclick="closeLoginModal()" style="margin-top:5px; background:#555;">Cancel</button>
+<div id="loginError" style="color:#ff6666; margin-top:10px;"></div>
+</div>
+
+<!-- PROJECTS MODAL -->
+<div class="modal" id="projectsModal">
+<h1>📁 Saved Projects</h1>
+<button onclick="closeProjectsModal()">Back</button>
+<div id="projectList"></div>
+</div>
+
+<!-- PUBLISH MANAGER -->
+<div class="modal" id="publishManagerModal">
+<h1>🌐 Your Published Websites</h1>
+<button onclick="closePublishManager()">Back to Editor</button>
+<button onclick="publishCurrent()" style="background:#6f42c1; margin-left:10px;">+ Publish Current</button>
+<div id="publishedList" style="margin-top:15px;"></div>
+</div>
+
+<!-- VIEW PUBLISHED -->
+<div class="modal" id="viewPublishedModal">
+<h1 id="viewTitle">Published Site</h1>
+<iframe id="publishedFrame" style="width:100%; height:70vh; background:white;"></iframe>
+<button onclick="closeViewPublished()">Close</button>
+<button id="sharePublishBtn" onclick="sharePublishedUrl()">📤 Share Link</button>
+</div>
+
+<!-- RENAME MODAL -->
+<div class="modal" id="renameModal">
+<h1>✏️ Rename</h1>
+<input type="text" id="renameInput" placeholder="New name">
+<button onclick="confirmRename()">Rename</button>
+<button onclick="closeRenameModal()">Cancel</button>
+</div>
+
+<div id="offline-badge">⚠️ OFFLINE MODE</div>
+
+<script>
+/* ================= FILE SYSTEM - EVERYTHING EDITABLE ================= */
+let files = {};  // Full path -> content
+let folders = ["src"];
+let currentFile = "src/index.html";
+let openTabs = [];
+let activeTab = null;
+let pendingRename = null;
+let currentUser = null;
+
+// Initialize default files
+function initDefaultFiles(){
+    files = {
+        "src/index.html": '<!DOCTYPE html>\n<html>\n<head>\n    <title>My App</title>\n    <link rel="stylesheet" href="style.css">\n</head>\n<body>\n    <h1>Hello World!</h1>\n    <script src="script.js"><\/script>\n</body>\n</html>',
+        "src/style.css": 'body {\n    font-family: Arial, sans-serif;\n    margin: 0;\n    padding: 20px;\n    background: #f0f0f0;\n}\n\nh1 {\n    color: #333;\n}',
+        "src/script.js": 'console.log("Hello from ZTL Code Studio!");\n\ndocument.addEventListener("DOMContentLoaded", function() {\n    console.log("Page loaded!");\n});'
+    };
+    folders = ["src"];
+}
+
+initDefaultFiles();
+
+/* ================= RENDER FILE TREE (All Files Editable) ================= */
+function renderFileTree(){
+    let container = document.getElementById("fileTree");
+    container.innerHTML = "";
+    
+    // Sort folders
+    let sortedFolders = [...folders].sort();
+    
+    sortedFolders.forEach(folder => {
+        let folderDiv = document.createElement("div");
+        folderDiv.className = "folder";
+        
+        let folderNameSpan = document.createElement("span");
+        folderNameSpan.className = "folder-name";
+        folderNameSpan.textContent = "📁 " + folder;
+        folderNameSpan.onclick = () => createNewFileInFolder(folder);
+        
+        let folderActions = document.createElement("div");
+        folderActions.className = "folder-actions";
+        folderActions.innerHTML = `
+            <span onclick="event.stopPropagation(); renameFolder('${folder}')" title="Rename folder">✏️</span>
+            <span onclick="event.stopPropagation(); deleteFolder('${folder}')" title="Delete folder (keeps files)">🗑️</span>
+        `;
+        
+        folderDiv.appendChild(folderNameSpan);
+        folderDiv.appendChild(folderActions);
+        container.appendChild(folderDiv);
+        
+        // Get files in this folder
+        let folderFiles = Object.keys(files).filter(f => f.startsWith(folder + "/")).sort();
+        
+        folderFiles.forEach(filePath => {
+            let fileName = filePath.split("/").pop();
+            let fileDiv = document.createElement("div");
+            fileDiv.className = "file-item";
+            
+            let fileIcon = fileName.endsWith(".html") ? "🌐" : fileName.endsWith(".css") ? "🎨" : fileName.endsWith(".js") ? "📜" : "📄";
+            
+            let fileNameSpan = document.createElement("span");
+            fileNameSpan.className = "file-name";
+            fileNameSpan.textContent = `  ${fileIcon} ${fileName}`;
+            fileNameSpan.onclick = () => openFile(filePath);
+            
+            let fileActions = document.createElement("div");
+            fileActions.className = "file-actions";
+            fileActions.innerHTML = `
+                <span onclick="event.stopPropagation(); renameFile('${filePath}')" title="Rename">✏️</span>
+                <span onclick="event.stopPropagation(); deleteFile('${filePath}')" title="Delete">🗑️</span>
+            `;
+            
+            fileDiv.appendChild(fileNameSpan);
+            fileDiv.appendChild(fileActions);
+            container.appendChild(fileDiv);
+        });
+    });
+}
+
+/* ================= FILE OPERATIONS ================= */
+function openFile(filePath){
+    if(!files[filePath]){
+        files[filePath] = "";
+    }
+    
+    if(!openTabs.includes(filePath)){
+        openTabs.push(filePath);
+    }
+    activeTab = filePath;
+    currentFile = filePath;
+    
+    renderTabs();
+    document.getElementById("editor").value = files[filePath] || "";
+}
+
+function renderTabs(){
+    let container = document.getElementById("tabsContainer");
+    container.innerHTML = "";
+    
+    openTabs.forEach(filePath => {
+        let tab = document.createElement("div");
+        tab.className = "tab" + (activeTab === filePath ? " active" : "");
+        
+        let fileName = filePath.split("/").pop();
+        tab.innerHTML = `${fileName} <span class="tab-close" onclick="event.stopPropagation(); closeTab('${filePath}')">×</span>`;
+        tab.onclick = () => openFile(filePath);
+        
+        container.appendChild(tab);
+    });
+}
+
+function closeTab(filePath){
+    let idx = openTabs.indexOf(filePath);
+    if(idx > -1) openTabs.splice(idx, 1);
+    
+    if(openTabs.length === 0 && Object.keys(files).length > 0){
+        openTabs.push(Object.keys(files)[0]);
+    }
+    
+    if(activeTab === filePath){
+        activeTab = openTabs[0] || null;
+        if(activeTab){
+            document.getElementById("editor").value = files[activeTab] || "";
+            currentFile = activeTab;
+        } else {
+            document.getElementById("editor").value = "";
+        }
+    }
+    renderTabs();
+}
+
+function saveCurrentFile(){
+    if(activeTab && files[activeTab] !== undefined){
+        files[activeTab] = document.getElementById("editor").value;
+        if(currentUser) saveAllToUserStorage();
+        showToast("Saved: " + activeTab.split("/").pop());
+    }
+}
+
+// Auto-save on edit
+document.getElementById("editor").oninput = (e) => {
+    if(activeTab){
+        files[activeTab] = e.target.value;
+        if(currentUser) saveAllToUserStorage();
+    }
+};
+
+function createNewFile(){
+    let fileName = prompt("File name (with extension, e.g., app.js):");
+    if(!fileName) return;
+    
+    let folder = prompt("Folder to save in:", "src");
+    if(!folders.includes(folder)){
+        folders.push(folder);
+    }
+    
+    let filePath = folder + "/" + fileName;
+    if(files[filePath]){
+        alert("File already exists!");
+        return;
+    }
+    
+    // Default content based on extension
+    let defaultContent = "";
+    if(fileName.endsWith(".html")) defaultContent = "<h1>New Page</h1>";
+    else if(fileName.endsWith(".css")) defaultContent = "/* New styles */";
+    else if(fileName.endsWith(".js")) defaultContent = "// New script\nconsole.log('Hello');";
+    
+    files[filePath] = defaultContent;
+    if(currentUser) saveAllToUserStorage();
+    renderFileTree();
+    openFile(filePath);
+}
+
+function createNewFileInFolder(folder){
+    let fileName = prompt("File name (with extension):");
+    if(!fileName) return;
+    
+    let filePath = folder + "/" + fileName;
+    if(files[filePath]){
+        alert("File already exists!");
+        return;
+    }
+    
+    files[filePath] = "";
+    if(currentUser) saveAllToUserStorage();
+    renderFileTree();
+    openFile(filePath);
+}
+
+function createNewFolder(){
+    let folderName = prompt("Folder name:");
+    if(!folderName) return;
+    if(folders.includes(folderName)){
+        alert("Folder already exists!");
+        return;
+    }
+    folders.push(folderName);
+    if(currentUser) saveAllToUserStorage();
+    renderFileTree();
+}
+
+function renameFile(oldPath){
+    pendingRename = { type: "file", oldPath: oldPath };
+    document.getElementById("renameInput").value = oldPath.split("/").pop();
+    document.getElementById("renameModal").style.display = "block";
+}
+
+function renameFolder(oldFolder){
+    pendingRename = { type: "folder", oldPath: oldFolder };
+    document.getElementById("renameInput").value = oldFolder;
+    document.getElementById("renameModal").style.display = "block";
+}
+
+function confirmRename(){
+    let newName = document.getElementById("renameInput").value.trim();
+    if(!newName || !pendingRename) return;
+    
+    if(pendingRename.type === "file"){
+        let oldPath = pendingRename.oldPath;
+        let folder = oldPath.substring(0, oldPath.lastIndexOf("/"));
+        let newPath = folder + "/" + newName;
+        
+        if(files[newPath]){
+            alert("File already exists!");
+            closeRenameModal();
+            return;
+        }
+        
+        files[newPath] = files[oldPath];
+        delete files[oldPath];
+        
+        // Update open tabs
+        let tabIndex = openTabs.indexOf(oldPath);
+        if(tabIndex !== -1){
+            openTabs[tabIndex] = newPath;
+        }
+        if(activeTab === oldPath){
+            activeTab = newPath;
+            currentFile = newPath;
+        }
+    } else if(pendingRename.type === "folder"){
+        let oldFolder = pendingRename.oldPath;
+        let newFolder = newName;
+        
+        // Update folder list
+        let folderIndex = folders.indexOf(oldFolder);
+        if(folderIndex !== -1){
+            folders[folderIndex] = newFolder;
+        }
+        
+        // Move all files
+        let newFiles = {};
+        Object.keys(files).forEach(filePath => {
+            if(filePath.startsWith(oldFolder + "/")){
+                let newPath = filePath.replace(oldFolder, newFolder);
+                newFiles[newPath] = files[filePath];
+                
+                // Update open tabs
+                let tabIndex = openTabs.indexOf(filePath);
+                if(tabIndex !== -1){
+                    openTabs[tabIndex] = newPath;
+                }
+                if(activeTab === filePath){
+                    activeTab = newPath;
+                    currentFile = newPath;
+                }
+            } else {
+                newFiles[filePath] = files[filePath];
+            }
+        });
+        files = newFiles;
+    }
+    
+    if(currentUser) saveAllToUserStorage();
+    renderFileTree();
+    renderTabs();
+    if(activeTab) document.getElementById("editor").value = files[activeTab] || "";
+    closeRenameModal();
+}
+
+function closeRenameModal(){
+    document.getElementById("renameModal").style.display = "none";
+    pendingRename = null;
+}
+
+function deleteFile(filePath){
+    if(confirm(`Delete "${filePath}"?`)){
+        delete files[filePath];
+        
+        // Remove from open tabs
+        let tabIndex = openTabs.indexOf(filePath);
+        if(tabIndex !== -1){
+            openTabs.splice(tabIndex, 1);
+        }
+        if(activeTab === filePath){
+            activeTab = openTabs[0] || null;
+            if(activeTab){
+                document.getElementById("editor").value = files[activeTab] || "";
+                currentFile = activeTab;
+            } else {
+                document.getElementById("editor").value = "";
+            }
+        }
+        
+        if(currentUser) saveAllToUserStorage();
+        renderFileTree();
+        renderTabs();
+        showToast("Deleted: " + filePath);
+    }
+}
+
+function deleteFolder(folder){
+    if(confirm(`Delete folder "${folder}"? Files will be moved to root.`)){
+        // Move files to root instead of deleting
+        Object.keys(files).forEach(filePath => {
+            if(filePath.startsWith(folder + "/")){
+                let newPath = filePath.replace(folder + "/", "");
+                files[newPath] = files[filePath];
+                delete files[filePath];
+            }
+        });
+        
+        let folderIndex = folders.indexOf(folder);
+        if(folderIndex !== -1) folders.splice(folderIndex, 1);
+        
+        if(currentUser) saveAllToUserStorage();
+        renderFileTree();
+        showToast("Folder deleted, files moved to root");
+    }
+}
+
+/* ================= RUN & PREVIEW ================= */
+function run(){
+    let html = "", css = "", js = "";
+    Object.keys(files).forEach(f => {
+        if(f.endsWith(".html")) html += files[f];
+        if(f.endsWith(".css")) css += files[f];
+        if(f.endsWith(".js")) js += files[f];
+    });
+    document.getElementById("frame").srcdoc = `<style>${css}</style>${html}<script>${js}<\/script>`;
+}
+
+function preview(){
+    let win = window.open();
+    win.document.write(document.getElementById("frame").srcdoc);
+    win.document.close();
+}
+
+/* ================= PROJECTS ================= */
+function newProject(){
+    let name = prompt("Project name:");
+    if(!name) return;
+    let storageKey = "ztl_projects_" + (currentUser ? currentUser.username : "guest");
+    let projects = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    projects.push({
+        name, files: JSON.parse(JSON.stringify(files)),
+        folders: [...folders], date: new Date().toLocaleString()
+    });
+    localStorage.setItem(storageKey, JSON.stringify(projects));
+    if(currentUser) saveAllToUserStorage();
+    alert("Project saved: " + name);
+}
+
+function openProjects(){
+    document.getElementById("projectsModal").style.display = "block";
+    let list = document.getElementById("projectList");
+    list.innerHTML = "";
+    let storageKey = "ztl_projects_" + (currentUser ? currentUser.username : "guest");
+    let projects = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    projects.forEach((p, i) => {
+        let card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `<h3>${escapeHtml(p.name)}</h3><p>${p.date}</p>
+            <button onclick="loadProject(${i})">Open</button>
+            <button onclick="deleteProject(${i})">Delete</button>`;
+        list.appendChild(card);
+    });
+}
+
+function loadProject(i){
+    let storageKey = "ztl_projects_" + (currentUser ? currentUser.username : "guest");
+    let projects = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    files = projects[i].files;
+    folders = projects[i].folders;
+    openTabs = [Object.keys(files)[0]];
+    activeTab = openTabs[0];
+    currentFile = activeTab;
+    renderFileTree();
+    renderTabs();
+    if(activeTab) document.getElementById("editor").value = files[activeTab] || "";
+    closeProjectsModal();
+    if(currentUser) saveAllToUserStorage();
+    showToast("Loaded: " + projects[i].name);
+}
+
+function deleteProject(i){
+    let storageKey = "ztl_projects_" + (currentUser ? currentUser.username : "guest");
+    let projects = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    projects.splice(i, 1);
+    localStorage.setItem(storageKey, JSON.stringify(projects));
+    openProjects();
+}
+
+function closeProjectsModal(){
+    document.getElementById("projectsModal").style.display = "none";
+}
+
+/* ================= PUBLISH SYSTEM ================= */
+function getPublishStorageKey(){
+    return "ztl_published_" + (currentUser ? currentUser.username : "guest");
+}
+
+function publishCurrent(){
+    let name = prompt("Published version name:", "My Project " + new Date().toLocaleString());
+    if(!name) return;
+    let desc = prompt("Description (optional):", "");
+    let publishId = Date.now().toString(36) + Math.random().toString(36).substr(2, 8);
+    let publishedSite = {
+        id: publishId, name, description: desc || "",
+        date: new Date().toISOString(), dateFormatted: new Date().toLocaleString(),
+        files: JSON.parse(JSON.stringify(files)), folders: [...folders]
+    };
+    let published = JSON.parse(localStorage.getItem(getPublishStorageKey()) || "[]");
+    published.unshift(publishedSite);
+    localStorage.setItem(getPublishStorageKey(), JSON.stringify(published));
+    alert("✅ Published!\nShare link: " + window.location.href.split('#')[0] + '#published=' + publishId);
+}
+
+function showPublishManager(){
+    document.getElementById("publishManagerModal").style.display = "block";
+    let published = JSON.parse(localStorage.getItem(getPublishStorageKey()) || "[]");
+    let container = document.getElementById("publishedList");
+    if(published.length === 0){
+        container.innerHTML = "<div class='card'>No published sites yet.</div>";
+        return;
+    }
+    container.innerHTML = "";
+    published.forEach(site => {
+        let card = document.createElement("div");
+        card.className = "card published-item";
+        card.innerHTML = `<h3>${escapeHtml(site.name)}</h3>
+            <p>${escapeHtml(site.description)}</p>
+            <p style="color:#aaa;">${site.dateFormatted}</p>
+            <button onclick='viewPublishedSite("${site.id}")'>View</button>
+            <button onclick='deletePublished("${site.id}")'>Delete</button>`;
+        container.appendChild(card);
+    });
+}
+
+function viewPublishedSite(id){
+    let published = JSON.parse(localStorage.getItem(getPublishStorageKey()) || "[]");
+    let site = published.find(p => p.id === id);
+    if(site){
+        let html = "", css = "", js = "";
+        Object.keys(site.files).forEach(f => {
+            if(f.endsWith(".html")) html += site.files[f];
+            if(f.endsWith(".css")) css += site.files[f];
+            if(f.endsWith(".js")) js += site.files[f];
+        });
+        document.getElementById("publishedFrame").srcdoc = `<style>${css}</style>${html}<script>${js}<\/script>`;
+        document.getElementById("viewTitle").innerHTML = `🌐 ${escapeHtml(site.name)}`;
+        document.getElementById("viewPublishedModal").style.display = "block";
+    }
+}
+
+function deletePublished(id){
+    if(confirm("Delete this published site?")){
+        let published = JSON.parse(localStorage.getItem(getPublishStorageKey()) || "[]");
+        localStorage.setItem(getPublishStorageKey(), JSON.stringify(published.filter(p => p.id !== id)));
+        showPublishManager();
+    }
+}
+
+function closePublishManager(){
+    document.getElementById("publishManagerModal").style.display = "none";
+}
+
+function closeViewPublished(){
+    document.getElementById("viewPublishedModal").style.display = "none";
+}
+
+function sharePublishedUrl(){
+    alert("Share this app URL with others. Published sites are saved locally.");
+}
+
+/* ================= ACCOUNT SYSTEM ================= */
+function saveAllToUserStorage(){
+    if(!currentUser) return;
+    let users = JSON.parse(localStorage.getItem("ztl_users") || "{}");
+    if(users[currentUser.username]){
+        users[currentUser.username].files = files;
+        users[currentUser.username].folders = folders;
+        localStorage.setItem("ztl_users", JSON.stringify(users));
+    }
+}
+
+function loadUserData(){
+    if(!currentUser) return;
+    let users = JSON.parse(localStorage.getItem("ztl_users") || "{}");
+    if(users[currentUser.username]){
+        files = users[currentUser.username].files || {};
+        folders = users[currentUser.username].folders || ["src"];
+        if(Object.keys(files).length === 0) initDefaultFiles();
+    }
+    renderFileTree();
+    openTabs = [Object.keys(files)[0]];
+    activeTab = openTabs[0];
+    currentFile = activeTab;
+    if(activeTab) document.getElementById("editor").value = files[activeTab] || "";
+    renderTabs();
+}
+
+function login(){
+    let username = document.getElementById("loginUsername").value.trim();
+    let password = document.getElementById("loginPassword").value.trim();
+    if(!username || !password){
+        document.getElementById("loginError").innerText = "Required";
+        return;
+    }
+    let users = JSON.parse(localStorage.getItem("ztl_users") || "{}");
+    if(users[username] && users[username].password !== password){
+        document.getElementById("loginError").innerText = "Wrong password";
+        return;
+    }
+    if(!users[username]){
+        users[username] = { password, files: {}, folders: ["src"] };
+    }
+    localStorage.setItem("ztl_users", JSON.stringify(users));
+    currentUser = { username, password };
+    localStorage.setItem("ztl_current_user", JSON.stringify(currentUser));
+    loadUserData();
+    updateUILoginState();
+    closeLoginModal();
+    showToast("Welcome " + username);
+}
+
+function logout(){
+    if(confirm("Logout?")){
+        saveAllToUserStorage();
+        currentUser = null;
+        localStorage.removeItem("ztl_current_user");
+        initDefaultFiles();
+        renderFileTree();
+        openTabs = [Object.keys(files)[0]];
+        activeTab = openTabs[0];
+        currentFile = activeTab;
+        if(activeTab) document.getElementById("editor").value = files[activeTab] || "";
+        renderTabs();
+        updateUILoginState();
+        showToast("Logged out");
+    }
+}
+
+function syncToCloud(){
+    if(!currentUser){ alert("Login first"); return; }
+    saveAllToUserStorage();
+    let data = { username: currentUser.username, files, folders, timestamp: new Date().toISOString() };
+    let modal = document.createElement("div");
+    modal.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:10001;padding:20px;";
+    modal.innerHTML = `<div style="background:#1e1e1e;border-radius:10px;padding:20px;">
+        <h2>Sync Code</h2>
+        <textarea id="syncData" style="width:100%;height:300px;font-family:monospace;">${JSON.stringify(data)}</textarea>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('syncData').value);alert('Copied!')">Copy</button>
+        <button onclick="this.parentElement.parentElement.remove()">Close</button>
+    </div>`;
+    document.body.appendChild(modal);
+}
+
+function syncFromCloud(){
+    if(!currentUser){ alert("Login first"); return; }
+    let code = prompt("Paste sync code:");
+    if(!code) return;
+    try{
+        let data = JSON.parse(code);
+        if(data.username !== currentUser.username) throw new Error("Wrong user");
+        files = data.files;
+        folders = data.folders;
+        renderFileTree();
+        openTabs = [Object.keys(files)[0]];
+        activeTab = openTabs[0];
+        currentFile = activeTab;
+        if(activeTab) document.getElementById("editor").value = files[activeTab] || "";
+        renderTabs();
+        saveAllToUserStorage();
+        showToast("Synced!");
+    } catch(e){ alert("Invalid code"); }
+}
+
+function showLoginModal(){
+    document.getElementById("loginModal").style.display = "block";
+}
+
+function closeLoginModal(){
+    document.getElementById("loginModal").style.display = "none";
+}
+
+function updateUILoginState(){
+    let loginBtn = document.getElementById("loginBtn");
+    let userDisplay = document.getElementById("userDisplay");
+    if(currentUser){
+        loginBtn.style.display = "none";
+        userDisplay.style.display = "flex";
+        document.getElementById("userName").innerText = currentUser.username;
+    } else {
+        loginBtn.style.display = "block";
+        userDisplay.style.display = "none";
+    }
+}
+
+function showToast(msg){
+    let toast = document.createElement("div");
+    toast.textContent = msg;
+    toast.style.cssText = "position:fixed;bottom:60px;right:20px;background:#333;color:white;padding:8px 16px;border-radius:8px;z-index:10000;animation:fadeOut 2s forwards;";
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+}
+
+function escapeHtml(str){
+    if(!str) return "";
+    return str.replace(/[&<>]/g, function(m){
+        if(m === '&') return '&amp;';
+        if(m === '<') return '&lt;';
+        if(m === '>') return '&gt;';
+        return m;
+    });
+}
+
+function updateOnlineStatus(){
+    let status = document.getElementById("status");
+    let badge = document.getElementById("offline-badge");
+    if(navigator.onLine){
+        status.innerHTML = "● Online";
+        status.style.color = "#4ade80";
+        badge.style.display = "none";
+    } else {
+        status.innerHTML = "● Offline";
+        status.style.color = "#ff4444";
+        badge.style.display = "block";
+    }
+}
+
+// Check for published deep link
+function checkHash(){
+    if(window.location.hash && window.location.hash.includes('published=')){
+        let id = window.location.hash.split('published=')[1];
+        viewPublishedSite(id);
+    }
+}
+
+window.addEventListener('load', () => {
+    loadUserFromStorage();
+    renderFileTree();
+    openTabs = [Object.keys(files)[0]];
+    activeTab = openTabs[0];
+    currentFile = activeTab;
+    if(activeTab) document.getElementById("editor").value = files[activeTab] || "";
+    renderTabs();
+    run();
+    updateOnlineStatus();
+    checkHash();
+});
+
+function loadUserFromStorage(){
+    let saved = localStorage.getItem("ztl_current_user");
+    if(saved){
+        currentUser = JSON.parse(saved);
+        loadUserData();
+        updateUILoginState();
+    }
+}
+
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+window.addEventListener('hashchange', checkHash);
+
+window.onbeforeunload = () => {
+    if(currentUser) saveAllToUserStorage();
+};
+</script>
+</body>
+</html>
